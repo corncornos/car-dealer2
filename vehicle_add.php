@@ -61,25 +61,101 @@ if ($check->rowCount() > 0) {
 }
 require 'header.php';
 ?>
-<h3>Add Vehicle</h3>
-<form method="post" enctype="multipart/form-data">
-  <div class="row">
-    <div class="mb-3 col-md-4"><label>Stock Number</label><input name="stock_number" class="form-control"></div>
-    <div class="mb-3 col-md-4"><label>Type</label><input name="vehicle_type" class="form-control" placeholder="CAR, Motor..."></div>
-    <div class="mb-3 col-md-4"><label>Brand</label><input name="brand" class="form-control"></div>
-    <div class="mb-3 col-md-4"><label>Model</label><input name="model" class="form-control"></div>
-    <div class="mb-3 col-md-2"><label>Year</label><input name="year" class="form-control" type="number"></div>
-    <div class="mb-3 col-md-2"><label>Color</label><input name="color" class="form-control"></div>
-    <div class="mb-3 col-md-3"><label>Transmission</label><input name="transmission" class="form-control"></div>
-    <div class="mb-3 col-md-3"><label>Fuel Type</label><input name="fuel_type" class="form-control"></div>
-    <div class="mb-3 col-md-3"><label>Mileage</label><input name="mileage" class="form-control"></div>
-    <div class="mb-3 col-md-3"><label>Purchase Price</label><input name="purchase_price" class="form-control" type="number" step="0.01"></div>
-    <div class="mb-3 col-md-3"><label>Selling Price</label><input name="selling_price" class="form-control" type="number" step="0.01"></div>
-    <div class="mb-3 col-md-4"><label>Image</label><input type="file" name="image" class="form-control" accept="image/*"></div>
-    <div class="mb-3 col-md-3"><label>Status</label><select name="status" class="form-select"><option>Available</option><option>Reserved</option><option>Sold</option></select></div>
-    <div class="mb-3 col-12"><label>Notes</label><textarea name="notes" class="form-control"></textarea></div>
+<div class="add-vehicle-page">
+  <div class="emoji-form-card">
+
+    <!-- Logo -->
+    <div class="form-logo">
+      <img src="images/Autoluxe1.png" alt="Autoluxe Logo">
+    </div>
+
+    <!-- Title -->
+    <h3>Add Vehicle</h3>
+
+    <!-- Form -->
+    <form method="post" enctype="multipart/form-data" class="vehicle-form">
+      <div class="form-row">
+
+        <div class="form-group">
+          <label>🔢 Stock Number</label>
+          <input type="text" name="stock_number" placeholder="Enter stock number">
+        </div>
+
+        <div class="form-group">
+          <label>🚘 Type</label>
+          <input type="text" name="vehicle_type" placeholder="CAR, Motor...">
+        </div>
+
+        <div class="form-group">
+          <label>🏷 Brand</label>
+          <input type="text" name="brand" placeholder="Brand">
+        </div>
+
+        <div class="form-group">
+          <label>📝 Model</label>
+          <input type="text" name="model" placeholder="Model">
+        </div>
+
+        <div class="form-group">
+          <label>📅 Year</label>
+          <input type="number" name="year" placeholder="Year">
+        </div>
+
+        <div class="form-group">
+          <label>🎨 Color</label>
+          <input type="text" name="color" placeholder="Color">
+        </div>
+
+        <div class="form-group">
+          <label>⚙ Transmission</label>
+          <input type="text" name="transmission" placeholder="Transmission">
+        </div>
+
+        <div class="form-group">
+          <label>⛽ Fuel Type</label>
+          <input type="text" name="fuel_type" placeholder="Fuel Type">
+        </div>
+
+        <div class="form-group">
+          <label>📏 Mileage</label>c
+          <input type="number" name="mileage" placeholder="Mileage">
+        </div>
+
+        <div class="form-group">
+          <label>💰 Purchase Price</label>
+          <input type="number" step="0.01" name="purchase_price" placeholder="Purchase Price">
+        </div>
+
+        <div class="form-group">
+          <label>💵 Selling Price</label>
+          <input type="number" step="0.01" name="selling_price" placeholder="Selling Price">
+        </div>
+
+        <div class="form-group">
+          <label>🖼 Image</label>
+          <input type="file" name="image" accept="image/*">
+        </div>
+
+        <div class="form-group">
+          <label>📌 Status</label>
+          <select name="status">
+            <option>Available</option>
+            <option>Reserved</option>
+            <option>Sold</option>
+          </select>
+        </div>
+
+        <div class="form-group full-width">
+          <label>📝 Notes</label>
+          <textarea name="notes" placeholder="Additional notes"></textarea>
+        </div>
+
+      </div>
+
+      <button type="submit" class="btn-emoji-save">❤️</button>
+    </form>
+
   </div>
-  <button class="btn btn-primary">Save</button>
-</form>
+</div>
 
 <?php require 'footer.php'; ?>

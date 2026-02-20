@@ -28,52 +28,102 @@ $stmt->execute($q);
 $vehicles = $stmt->fetchAll();
 require 'header.php';
 ?>
-<div class="d-flex justify-content-between mb-3">
-  <h3>Inventory</h3>
-  <div><a class="btn btn-primary" href="vehicle_add.php">Add Vehicle</a></div>
-</div>
-<form method="get" class="row g-2 mb-3">
-  <div class="col-md-3"><input name="brand" value="<?php echo htmlspecialchars($_GET['brand'] ?? '') ?>" class="form-control" placeholder="Brand"></div>
-  <div class="col-md-3"><input name="model" value="<?php echo htmlspecialchars($_GET['model'] ?? '') ?>" class="form-control" placeholder="Model"></div>
-  <div class="col-md-2"><input name="year" value="<?php echo htmlspecialchars($_GET['year'] ?? '') ?>" class="form-control" placeholder="Year"></div>
-  <div class="col-md-2">
-    <select name="status" class="form-select"><option value="">Any Status</option><option <?php if(($_GET['status'] ?? '')=='Available') echo 'selected'; ?>>Available</option><option <?php if(($_GET['status'] ?? '')=='Sold') echo 'selected'; ?>>Sold</option><option <?php if(($_GET['status'] ?? '')=='Reserved') echo 'selected'; ?>>Reserved</option></select>
-  </div>
-  <div class="col-md-2">
-    <select name="sort" class="form-select"><option value="">Sort</option><option value="price_asc">Price ↑</option><option value="price_desc">Price ↓</option><option value="date_asc">Date ↑</option><option value="date_desc">Date ↓</option></select>
-  </div>
-  <div class="col-md-12"><button class="btn btn-secondary btn-sm mt-2">Search / Filter</button></div>
-</form>
+<div class="inventory-container">
 
-<table class="table">
-  <thead><tr><th>Image</th><th>Stock</th><th>Brand</th><th>Model</th><th>Year</th><th>Price</th><th>Status</th><th>Date Added</th><th>Actions</th></tr></thead>
-  <tbody>
-    <?php foreach($vehicles as $v): ?>
-      <tr>
-        <td>
-          <?php if(!empty($v['image_path'])): ?>
-            <img src="<?php echo htmlspecialchars($v['image_path']); ?>" alt="Vehicle image" style="width:250px;height:auto;object-fit:cover;border-radius:4px;">
-          <?php else: ?>
-            <span class="text-muted small">No image</span>
-          <?php endif; ?>
-        </td>
-        <td><?php echo htmlspecialchars($v['stock_number']); ?></td>
-        <td><?php echo htmlspecialchars($v['brand']); ?></td>
-        <td><?php echo htmlspecialchars($v['model']); ?></td>
-        <td><?php echo htmlspecialchars($v['year']); ?></td>
-        <td>₱<?php echo number_format($v['selling_price'],2); ?></td>
-        <td><?php echo htmlspecialchars($v['status']); ?></td>
-        <td><?php echo htmlspecialchars($v['created_at']); ?></td>
-        <td>
-          <a class="btn btn-sm btn-primary" href="vehicle_edit.php?id=<?php echo $v['id']; ?>">Edit</a>
-          <a class="btn btn-sm btn-danger" href="vehicle_delete.php?id=<?php echo $v['id']; ?>" onclick="return confirm('Delete?')">Delete</a>
-          <?php if($v['status'] !== 'Sold'): ?>
-            <a class="btn btn-sm btn-success" href="sale_mark.php?id=<?php echo $v['id']; ?>">Mark Sold</a>
-          <?php endif; ?>
-        </td>
-      </tr>
-    <?php endforeach; ?>
-  </tbody>
-</table>
+  <!-- Header -->
+  <div class="inventory-header">
+    <div>
+      <h2> Vehicle Inventory</h2>
+      <p>Manage and monitor all available units</p>
+    </div>
+    <a href="vehicle_add.php" class="btn-add">+ Add Vehicle</a>
+  </div>
+
+  <!-- Filter Card -->
+  <div class="filter-card">
+    <form method="get" class="filter-form">
+      <input name="brand" value="<?php echo htmlspecialchars($_GET['brand'] ?? '') ?>" placeholder="Brand">
+
+      <input name="model" value="<?php echo htmlspecialchars($_GET['model'] ?? '') ?>" placeholder="Model">
+
+      <input name="year" value="<?php echo htmlspecialchars($_GET['year'] ?? '') ?>" placeholder="Year">
+
+      <select name="status">
+        <option value="">Any Status</option>
+        <option value="Available" <?php if(($_GET['status'] ?? '')=='Available') echo 'selected'; ?>>Available</option>
+        <option value="Sold" <?php if(($_GET['status'] ?? '')=='Sold') echo 'selected'; ?>>Sold</option>
+        <option value="Reserved" <?php if(($_GET['status'] ?? '')=='Reserved') echo 'selected'; ?>>Reserved</option>
+      </select>
+
+      <select name="sort">
+        <option value="">Sort</option>
+        <option value="price_asc">Price ↑</option>
+        <option value="price_desc">Price ↓</option>
+        <option value="date_asc">Date ↑</option>
+        <option value="date_desc">Date ↓</option>
+      </select>
+
+      <button type="submit" class="btn-search">Search</button>
+    </form>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Image</th>
+          <th>Stock</th>
+          <th>Brand</th>
+          <th>Model</th>
+          <th>Year</th>
+          <th>Price</th>
+          <th>Status</th>
+          <th>Date Added</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <?php foreach($vehicles as $v): ?>
+        <tr>
+          <td>
+            <?php if(!empty($v['image_path'])): ?>
+              <img src="<?php echo htmlspecialchars($v['image_path']); ?>" class="vehicle-img">
+            <?php else: ?>
+              <span class="no-image">No Image</span>
+            <?php endif; ?>
+          </td>
+
+          <td><?php echo htmlspecialchars($v['stock_number']); ?></td>
+          <td><?php echo htmlspecialchars($v['brand']); ?></td>
+          <td><?php echo htmlspecialchars($v['model']); ?></td>
+          <td><?php echo htmlspecialchars($v['year']); ?></td>
+          <td class="price">₱<?php echo number_format($v['selling_price'],2); ?></td>
+
+          <td>
+            <span class="badge <?php echo strtolower($v['status']); ?>">
+              <?php echo htmlspecialchars($v['status']); ?>
+            </span>
+          </td>
+
+          <td><?php echo htmlspecialchars($v['created_at']); ?></td>
+
+          <td class="actions">
+            <a href="vehicle_edit.php?id=<?php echo $v['id']; ?>" class="btn-action edit">Edit</a>
+            <a href="vehicle_delete.php?id=<?php echo $v['id']; ?>" class="btn-action delete" onclick="return confirm('Delete?')">Delete</a>
+
+            <?php if($v['status'] !== 'Sold'): ?>
+              <a href="sale_mark.php?id=<?php echo $v['id']; ?>" class="btn-action sold">Mark Sold</a>
+            <?php endif; ?>
+          </td>
+        </tr>
+        <?php endforeach; ?>
+      </tbody>
+
+    </table>
+  </div>
+
+</div>
 
 <?php require 'footer.php'; ?>

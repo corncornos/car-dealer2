@@ -11,20 +11,28 @@ $inventoryValue = $pdo->query('SELECT COALESCE(SUM(purchase_price),0) FROM vehic
 $totalSales = $pdo->query('SELECT COALESCE(SUM(sale_price),0) FROM sales')->fetchColumn();
 require 'header.php';
 ?>
+<div class="dashboard-header">
+    <img src="images/Autoluxe1.png" alt="Dashboard Logo">
+</div>
 <table class="dashboard-table">
   <tr>
     <td class="stat-primary">
       <h5>Total Vehicles</h5>
       <h3><?php echo $total; ?></h3>
     </td>
+
     <td class="stat-success">
       <h5>Available</h5>
       <h3><?php echo $available; ?></h3>
     </td>
+  </tr>
+
+  <tr>
     <td class="stat-secondary">
       <h5>Sold</h5>
       <h3><?php echo $sold; ?></h3>
     </td>
+
     <td class="stat-dark">
       <h5>Inventory Value</h5>
       <h3>₱<?php echo number_format($inventoryValue,2); ?></h3>
@@ -34,11 +42,9 @@ require 'header.php';
 
 <table class="dashboard-table">
   <tr>
-    <td class="stat-primary" colspan="2">
+    <td class="stat-primary">
       <h5>Total Sales</h5>
       <h3>₱<?php echo number_format($totalSales,2); ?></h3>
     </td>
   </tr>
 </table>
-
-<?php require 'footer.php'; ?>

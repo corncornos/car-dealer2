@@ -13,16 +13,27 @@ $hide_nav = isset($hide_nav) && $hide_nav;
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="vehicles.css">
+  <link rel="stylesheet" href="vehicle_add.css">
+  <link rel="stylesheet" href="Sales.css">
+  <link rel="stylesheet" href="audit_trails.css">
   <title>Autoluxe Car Dealer Inventory</title>
 </head>
 <body>
 <?php if (!$hide_nav): ?>
 <!-- Side Navigation -->
 <nav class="side-nav">
-  <button class="side-nav-toggle">☰</button>
+
   <div class="side-nav-header">
-    <img src="images/AL5.png" class="side-nav-logo" alt="Autoluxe Logo">
-  </div>
+<div class="dashboard-header">
+    <img src="images/Autoluxe1.png" alt="Dashboard Logo">
+</div>
+    <a href="dashboard.php">
+        <img src="images/Autoluxe.png" 
+             class="side-nav-logo" 
+             alt="Autoluxe Logo">
+    </a>
+</div>
   <ul class="side-nav-menu">
     <li class="side-nav-item">
       <a class="side-nav-link" href="dashboard.php">Dashboard</a>
@@ -44,13 +55,23 @@ $hide_nav = isset($hide_nav) && $hide_nav;
   </ul>
   <div class="side-nav-user">
     <?php if(isset($_SESSION['user'])): ?>
-      <div class="side-nav-user-info"><?php echo htmlspecialchars($_SESSION['user']['name']); ?></div>
-      <a class="btn btn-outline-light btn-sm" href="logout.php">Logout</a>
+        <div class="side-nav-user-info">
+            <span class="user-icon">👤</span>
+            <span class="user-name"><?php echo htmlspecialchars($_SESSION['user']['name']); ?></span>
+        </div>
+        <a class="logout-btn" href="logout.php">↪ Logout</a>
     <?php else: ?>
-      <a class="btn btn-outline-light btn-sm" href="login.php">Login</a>
+        <a class="login-btn" href="login.php">Login</a>
     <?php endif; ?>
-  </div>
+</div>
 </nav>
 <?php endif; ?>
 <div class="main-content">
 <div class="container">
+<script>
+function toggleDetails(element) {
+    element.parentElement.classList.toggle("active");
+}
+</script>
+</body>
+</html>
