@@ -43,7 +43,7 @@ require 'header.php';
 <div class="container">
     <div class="login-card">
         <!-- Logo -->
-        <img src="images/AL4.png" class="logo" alt="Autoluxe Logo">
+        <img src="images/Autoluxe1.png" class="logo" alt="Autoluxe Logo">
 
         <h2>Welcome</h2>
         <small>Authorized Personnel Only</small>

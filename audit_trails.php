@@ -122,19 +122,40 @@ function format_audit_detail($detail, $action = '') {
 require 'header.php';
 if (!isAdmin()) { header('Location: dashboard.php'); exit; }
 ?>
-<h3>Audit Trails</h3>
-<form method="get" class="row g-2 mb-3">
-  <div class="col-md-3"><input name="user" value="<?php echo htmlspecialchars($q_user); ?>" class="form-control" placeholder="User"></div>
-  <div class="col-md-3"><input name="action" value="<?php echo htmlspecialchars($q_action); ?>" class="form-control" placeholder="Action"></div>
-  <div class="col-md-2"><input name="date_from" value="<?php echo htmlspecialchars($date_from); ?>" class="form-control" type="date" placeholder="From"></div>
-  <div class="col-md-2"><input name="date_to" value="<?php echo htmlspecialchars($date_to); ?>" class="form-control" type="date" placeholder="To"></div>
-  <div class="col-md-2"><button class="btn btn-secondary">Search</button></div>
+<h3 class="audit-title">Audit Trails</h3>
+
+<form method="get" class="row g-2 mb-3 audit-form">
+  <div class="col-md-3">
+    <input name="user" value="<?php echo htmlspecialchars($q_user); ?>" class="form-control" placeholder="User">
+  </div>
+  <div class="col-md-3">
+    <input name="action" value="<?php echo htmlspecialchars($q_action); ?>" class="form-control" placeholder="Action">
+  </div>
+  <div class="col-md-2">
+    <input name="date_from" value="<?php echo htmlspecialchars($date_from); ?>" class="form-control" type="date" placeholder="From">
+  </div>
+  <div class="col-md-2">
+    <input name="date_to" value="<?php echo htmlspecialchars($date_to); ?>" class="form-control" type="date" placeholder="To">
+  </div>
+  <div class="col-md-2">
+    <button class="btn">Search</button>
+  </div>
 </form>
-<div class="card"><div class="card-body">
-  <table class="table table-sm table-striped">
-    <thead><tr><th>When</th><th>User</th><th>Action</th><th>Detail</th><th>IP</th></tr></thead>
-    <tbody>
-      <?php foreach($logs as $l): ?>
+
+<div class="card">
+  <div class="card-body">
+    <table class="table table-sm table-striped">
+      <thead>
+        <tr>
+          <th>When</th>
+          <th>User</th>
+          <th>Action</th>
+          <th>Detail</th>
+          <th>IP</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php foreach($logs as $l): ?>
         <tr>
           <td><?php echo htmlspecialchars($l['created_at']); ?></td>
           <td><?php echo htmlspecialchars($l['user_name']); ?></td>
@@ -142,15 +163,19 @@ if (!isAdmin()) { header('Location: dashboard.php'); exit; }
           <td style="max-width:40rem;word-break:break-word;"><?php echo format_audit_detail($l['detail'], $l['action']); ?></td>
           <td><?php echo htmlspecialchars($l['ip']); ?></td>
         </tr>
-      <?php endforeach; ?>
-    </tbody>
-  </table>
-  <nav aria-label="Page navigation">
-    <ul class="pagination">
-      <?php for($p=1;$p<=$pages;$p++): ?>
-        <li class="page-item <?php if($p==$page) echo 'active'; ?>"><a class="page-link" href="?<?php echo http_build_query(array_merge($_GET, ['page'=>$p])); ?>"><?php echo $p; ?></a></li>
-      <?php endfor; ?>
-    </ul>
-  </nav>
-</div></div>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+
+    <nav aria-label="Page navigation">
+      <ul class="pagination">
+        <?php for($p=1;$p<=$pages;$p++): ?>
+          <li class="page-item <?php if($p==$page) echo 'active'; ?>">
+            <a class="page-link" href="?<?php echo http_build_query(array_merge($_GET, ['page'=>$p])); ?>"><?php echo $p; ?></a>
+          </li>
+        <?php endfor; ?>
+      </ul>
+    </nav>
+  </div>
+</div>
 <?php require 'footer.php'; ?>
