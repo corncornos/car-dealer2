@@ -166,16 +166,16 @@ if (!isAdmin()) { header('Location: dashboard.php'); exit; }
         <?php endforeach; ?>
       </tbody>
     </table>
-
     <nav aria-label="Page navigation">
-      <ul class="pagination">
+      <dl class="pagination">
         <?php for($p=1;$p<=$pages;$p++): ?>
-          <li class="page-item <?php if($p==$page) echo 'active'; ?>">
+          <dt class="page-item <?php if($p==$page) echo 'active'; ?>">
             <a class="page-link" href="?<?php echo http_build_query(array_merge($_GET, ['page'=>$p])); ?>"><?php echo $p; ?></a>
-          </li>
+          </dt>
         <?php endfor; ?>
-      </ul>
+      </dl>
     </nav>
   </div>
 </div>
 <?php require 'footer.php'; ?>
+

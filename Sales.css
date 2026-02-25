@@ -15,17 +15,22 @@
     overflow: hidden;
     box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
 }
-
 .gold-black-table thead {
     background: linear-gradient(90deg, #d4af37, #ffd700);
     color: #000;
 }
-
-.gold-black-table th, 
+.gold-black-table th{
+    color: gold;
+    font-weight: bold;
+    font-size: 14px;
+    text-align: center;
+    vertical-align: middle;
+    padding: 12px 10px;
+  
+}
 .gold-black-table td {
     padding: 12px 10px;
-    color: #fff;
-    border-bottom: 1px solid #333;
+    color: gold;
     font-size: 14px;
     vertical-align: middle;
 }
@@ -73,6 +78,8 @@
     font-weight: 600;
     font-size: 13px;
     margin-top: 4px;
+    text-align: left;
+    vertical-align: middle;
 }
 
 /* Responsive */

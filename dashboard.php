@@ -12,7 +12,7 @@ $totalSales = $pdo->query('SELECT COALESCE(SUM(sale_price),0) FROM sales')->fetc
 require 'header.php';
 ?>
 <div class="dashboard-header">
-    <img src="images/Autoluxe1.png" alt="Dashboard Logo">
+    
 </div>
 <table class="dashboard-table">
   <tr>

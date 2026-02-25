@@ -14,7 +14,7 @@ $hide_nav = isset($hide_nav) && $hide_nav;
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="vehicles.css">
-  <link rel="stylesheet" href="vehicle_add.css">
+  <link rel="stylesheet" href="vehicle_add_edit.css">
   <link rel="stylesheet" href="Sales.css">
   <link rel="stylesheet" href="audit_trails.css">
   <title>Autoluxe Car Dealer Inventory</title>
@@ -26,10 +26,10 @@ $hide_nav = isset($hide_nav) && $hide_nav;
 
   <div class="side-nav-header">
 <div class="dashboard-header">
-    <img src="images/Autoluxe1.png" alt="Dashboard Logo">
+    <img src="images/AL5.png" alt="Dashboard Logo">
 </div>
     <a href="dashboard.php">
-        <img src="images/Autoluxe.png" 
+        <img src="images/AL6.png" 
              class="side-nav-logo" 
              alt="Autoluxe Logo">
     </a>
@@ -40,9 +40,6 @@ $hide_nav = isset($hide_nav) && $hide_nav;
     </li>
     <li class="side-nav-item">
       <a class="side-nav-link" href="vehicles.php">Inventory</a>
-    </li>
-    <li class="side-nav-item">
-      <a class="side-nav-link" href="vehicle_add.php">Add Vehicle</a>
     </li>
     <li class="side-nav-item">
       <a class="side-nav-link" href="sales.php">Sales</a>
