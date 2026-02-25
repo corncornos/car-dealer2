@@ -109,7 +109,7 @@ body {
   background: #1a1a1a;
   padding: 20px;
   border-radius: 12px;
-  box-shadow: 0 0 20px rgba(255, 215, 0, 0.1);
+  box-shadow: 0 0 20px rgba(194, 168, 19, 0.1);
   overflow-x: auto;
 }
 
@@ -200,6 +200,136 @@ tbody tr:hover {
 .btn-action:hover {
   transform: translateY(-2px);
   box-shadow: 0 0 10px gold;
+}
+
+/* ===== CLICKABLE ROW ===== */
+tbody tr {
+  cursor: pointer;
+}
+
+/* ===== MODAL OVERLAY ===== */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal-overlay.active {
+  display: flex;
+}
+
+.modal-card {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 16px;
+  padding: 30px;
+  max-width: 1250px;
+  width: 70%;
+  height:80%;
+  overflow-y: auto;
+  box-shadow: 0 0 40px rgba(255, 215, 0, 0.2);
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  top: 15px;
+  right: 18px;
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 22px;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.modal-close:hover {
+  color: gold;
+}
+
+.modal-img {
+  width: 100%;
+  max-height: 200px;
+  object-fit: scale-down;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  box-shadow: 0 0 15px rgba(255,215,0,0.15);
+}
+
+.modal-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: gold;
+  margin: 0 0 5px;
+}
+
+.modal-stock {
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 18px;
+}
+
+.modal-grid {
+  position:static;
+  top:8px;
+  right:20px;
+  display: grid;
+  grid-template-columns: auto auto auto auto;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.modal-notes-section {
+  position:static;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: rgba(255, 215, 0, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+.modal-notes-section .modal-field {
+  margin-bottom: 0;
+}
+
+.modal-notes-section .modal-field span {
+  line-height: 1.5;
+  white-space: pre-wrap;
+  font-style: italic;
+  color: #ddd;
+}
+
+.modal-field label {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #888;
+  margin-bottom: 3px;
+}
+
+.modal-field span {
+  font-size: 15px;
+  color: #f5f5f5;
+}
+
+.modal-field span.price {
+  font-size: 18px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  right:8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
 }
 
 /* ===== FADE ANIMATION ===== */

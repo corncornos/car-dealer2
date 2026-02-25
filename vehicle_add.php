@@ -32,6 +32,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_POST['transmission'] ?? null,
         $_POST['fuel_type'] ?? null,
         $_POST['mileage'] ?? null,
+        $_POST['engine_type'] ?? null,
+        $_POST['plate_number'] ?? null,
+        $_POST['body_type'] ?? null,
         $_POST['purchase_price'] ?? null,
         $_POST['selling_price'] ?? null,
         $imagePath,
@@ -52,7 +55,9 @@ if ($check->rowCount() > 0) {
     exit; // ⛔ VERY IMPORTANT
 }
 
-    $stmt = $pdo->prepare('INSERT INTO vehicles (stock_number, vehicle_type, brand, model, year, color, transmission, fuel_type, mileage, purchase_price, selling_price, image_path, status, notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+    $stmt = $pdo->prepare('INSERT INTO vehicles 
+    (stock_number, vehicle_type, brand, model, year, color, 
+    transmission, fuel_type, mileage, engine_type, plate_number, body_type, purchase_price, selling_price, image_path, status, notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
     $stmt->execute($data);
     $id = $pdo->lastInsertId();
     add_audit($pdo, 'Vehicle Added', json_encode(['id'=>$id,'stock_number'=>$_POST['stock_number'] ?? null,'brand'=>$_POST['brand'] ?? null,'model'=>$_POST['model'] ?? null]));
@@ -61,12 +66,12 @@ if ($check->rowCount() > 0) {
 }
 require 'header.php';
 ?>
-<div class="add-vehicle-page">
+<div class="add-edit-vehicle-page">
   <div class="emoji-form-card">
 
     <!-- Logo -->
     <div class="form-logo">
-      <img src="images/Autoluxe1.png" alt="Autoluxe Logo">
+      <img src="images/AL4.png" alt="Autoluxe Logo">
     </div>
 
     <!-- Title -->
@@ -77,84 +82,102 @@ require 'header.php';
       <div class="form-row">
 
         <div class="form-group">
-          <label>🔢 Stock Number</label>
+          <label>Stock Number</label>
           <input type="text" name="stock_number" placeholder="Enter stock number">
         </div>
 
         <div class="form-group">
-          <label>🚘 Type</label>
+          <label>Type</label>
           <input type="text" name="vehicle_type" placeholder="CAR, Motor...">
         </div>
 
         <div class="form-group">
-          <label>🏷 Brand</label>
+          <label>Brand</label>
           <input type="text" name="brand" placeholder="Brand">
         </div>
 
         <div class="form-group">
-          <label>📝 Model</label>
+          <label>Model</label>
           <input type="text" name="model" placeholder="Model">
         </div>
+        
 
         <div class="form-group">
-          <label>📅 Year</label>
+          <label>Year</label>
           <input type="number" name="year" placeholder="Year">
         </div>
 
         <div class="form-group">
-          <label>🎨 Color</label>
+          <label>Color</label>
           <input type="text" name="color" placeholder="Color">
         </div>
 
         <div class="form-group">
-          <label>⚙ Transmission</label>
-          <input type="text" name="transmission" placeholder="Transmission">
+          <label>Transmission</label>
+          <select name="transmission">
+            <option>Automatic</option>
+            <option>Manual</option>
+          </select>
         </div>
 
         <div class="form-group">
-          <label>⛽ Fuel Type</label>
+          <label>Fuel Type</label>
           <input type="text" name="fuel_type" placeholder="Fuel Type">
         </div>
 
         <div class="form-group">
-          <label>📏 Mileage</label>c
+          <label>Mileage</label>
           <input type="number" name="mileage" placeholder="Mileage">
         </div>
 
         <div class="form-group">
-          <label>💰 Purchase Price</label>
+          <label>Engine Type</label>
+          <input type="text" name="engine_type" placeholder="Engine Type">
+        </div>
+        <div class="form-group">
+          <label>Plate Number</label>
+          <input type="text" name="plate_number" placeholder="Plate Number">
+        </div>
+        <div class="form-group">
+          <label>Body Type</label>
+          <input type="text" name="body_type" placeholder="Body Type">
+        </div>
+
+
+        <div class="form-group">
+          <label>Purchase Price</label>
           <input type="number" step="0.01" name="purchase_price" placeholder="Purchase Price">
         </div>
 
         <div class="form-group">
-          <label>💵 Selling Price</label>
+          <label>Selling Price</label>
           <input type="number" step="0.01" name="selling_price" placeholder="Selling Price">
         </div>
 
         <div class="form-group">
-          <label>🖼 Image</label>
+          <label>Image</label>
           <input type="file" name="image" accept="image/*">
         </div>
 
         <div class="form-group">
-          <label>📌 Status</label>
+          <label>Status</label>
           <select name="status">
             <option>Available</option>
             <option>Reserved</option>
-            <option>Sold</option>
           </select>
         </div>
 
         <div class="form-group full-width">
-          <label>📝 Notes</label>
+          <label>Notes</label>
           <textarea name="notes" placeholder="Additional notes"></textarea>
         </div>
 
       </div>
-
-      <button type="submit" class="btn-emoji-save">❤️</button>
+      <div class="form-actions">
+      <button type="submit" class="btn-emoji-save">Add Vehicle</button>
+      <button type="reset" class="btn-emoji-cancel" onclick="window.location.href='vehicles.php'">Cancel</button>
+      </div>
     </form>
-
   </div>
 </div>
 

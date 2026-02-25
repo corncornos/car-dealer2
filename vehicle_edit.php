@@ -41,6 +41,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'transmission' => $_POST['transmission'] ?? null,
         'fuel_type' => $_POST['fuel_type'] ?? null,
         'mileage' => $_POST['mileage'] ?? null,
+        'engine_type' => $_POST['engine_type'] ?? null,
+        'plate_number' => $_POST['plate_number'] ?? null,
+        'body_type' => $_POST['body_type'] ?? null,
         'purchase_price' => $_POST['purchase_price'] ?? null,
         'selling_price' => $_POST['selling_price'] ?? null,
         'image_path' => $imagePath,
@@ -57,6 +60,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $after['transmission'],
         $after['fuel_type'],
         $after['mileage'],
+        $after['engine_type'],
+        $after['plate_number'],
+        $after['body_type'],
         $after['purchase_price'],
         $after['selling_price'],
         $after['image_path'],
@@ -78,40 +84,127 @@ if ($check->rowCount() > 0) {
     </script>";
     exit; // ⛔ STOP execution (VERY IMPORTANT)
 }
-    $stmt = $pdo->prepare('UPDATE vehicles SET stock_number=?, vehicle_type=?, brand=?, model=?, year=?, color=?, transmission=?, fuel_type=?, mileage=?, purchase_price=?, selling_price=?, image_path=?, status=?, notes=? WHERE id=?');
+    $stmt = $pdo->prepare('UPDATE vehicles SET stock_number=?, vehicle_type=?, brand=?,
+     model=?, year=?, color=?, transmission=?
+     , fuel_type=?, mileage=?, engine_type=?, plate_number=?,
+      body_type=?, purchase_price=?, selling_price=?, image_path=?
+      , status=?, notes=? WHERE id=?');
     $stmt->execute($data);
     add_audit($pdo, 'Vehicle Updated', json_encode(['id'=>$id,'before'=>$v,'after'=>$after]));
     header('Location: vehicles.php'); exit;
 }
 require 'header.php';
 ?>
-<h3>Edit Vehicle</h3>
-<form method="post" enctype="multipart/form-data">
-  <div class="row">
-    <div class="mb-3 col-md-4"><label>Stock Number</label><input name="stock_number" value="<?php echo htmlspecialchars($v['stock_number']); ?>" class="form-control"></div>
-    <div class="mb-3 col-md-4"><label>Type</label><input name="vehicle_type" value="<?php echo htmlspecialchars($v['vehicle_type']); ?>" class="form-control"></div>
-    <div class="mb-3 col-md-4"><label>Brand</label><input name="brand" value="<?php echo htmlspecialchars($v['brand']); ?>" class="form-control"></div>
-    <div class="mb-3 col-md-4"><label>Model</label><input name="model" value="<?php echo htmlspecialchars($v['model']); ?>" class="form-control"></div>
-    <div class="mb-3 col-md-2"><label>Year</label><input name="year" value="<?php echo htmlspecialchars($v['year']); ?>" class="form-control" type="number"></div>
-    <div class="mb-3 col-md-2"><label>Color</label><input name="color" value="<?php echo htmlspecialchars($v['color']); ?>" class="form-control"></div>
-    <div class="mb-3 col-md-3"><label>Transmission</label><input name="transmission" value="<?php echo htmlspecialchars($v['transmission']); ?>" class="form-control"></div>
-    <div class="mb-3 col-md-3"><label>Fuel Type</label><input name="fuel_type" value="<?php echo htmlspecialchars($v['fuel_type']); ?>" class="form-control"></div>
-    <div class="mb-3 col-md-3"><label>Mileage</label><input name="mileage" value="<?php echo htmlspecialchars($v['mileage']); ?>" class="form-control"></div>
-    <div class="mb-3 col-md-3"><label>Purchase Price</label><input name="purchase_price" value="<?php echo htmlspecialchars($v['purchase_price']); ?>" class="form-control" type="number" step="0.01"></div>
-    <div class="mb-3 col-md-3"><label>Selling Price</label><input name="selling_price" value="<?php echo htmlspecialchars($v['selling_price']); ?>" class="form-control" type="number" step="0.01"></div>
-    <div class="mb-3 col-md-3"><label>Status</label><select name="status" class="form-select"><option <?php if($v['status']=='Available') echo 'selected'; ?>>Available</option><option <?php if($v['status']=='Reserved') echo 'selected'; ?>>Reserved</option><option <?php if($v['status']=='Sold') echo 'selected'; ?>>Sold</option></select></div>
-    <div class="mb-3 col-md-4">
-      <label>Image</label>
-      <?php if(!empty($v['image_path'])): ?>
-        <div class="mb-2">
-          <img src="<?php echo htmlspecialchars($v['image_path']); ?>" alt="Vehicle image" style="max-width:150px;max-height:120px;object-fit:cover;border-radius:4px;">
-        </div>
-      <?php endif; ?>
-      <input type="file" name="image" class="form-control" accept="image/*">
-    </div>
-    <div class="mb-3 col-12"><label>Notes</label><textarea name="notes" class="form-control"><?php echo htmlspecialchars($v['notes']); ?></textarea></div>
-  </div>
-  <button class="btn btn-primary">Update</button>
-</form>
+<div class="add-edit-vehicle-page">
+  <div class="emoji-form-card">
 
+    <!-- Logo -->
+    <div class="form-logo">
+      <img src="images/AL4.png" alt="Autoluxe Logo">
+    </div>
+
+    <!-- Title -->
+    <h3>Add Vehicle</h3>
+
+    <!-- Form -->
+    <form method="post" enctype="multipart/form-data" class="vehicle-form">
+      <div class="form-row">
+
+        <div class="form-group">
+          <label>Stock Number</label>
+          <input type="text" name="stock_number" value="<?php echo htmlspecialchars($v['stock_number']); ?>" class="form-control">
+        </div>
+
+        <div class="form-group">
+          <label>Type</label>
+          <input type="text" name="vehicle_type" value="<?php echo htmlspecialchars($v['vehicle_type']); ?>" class="form-control">
+        </div>
+
+        <div class="form-group">
+          <label>Brand</label>
+          <input type="text" name="brand" value="<?php echo htmlspecialchars($v['brand']); ?>" class="form-control">
+        </div>
+
+        <div class="form-group">
+          <label>Model</label>
+          <input type="text" name="model" value="<?php echo htmlspecialchars($v['model']); ?>" class="form-control">
+        </div>
+
+        <div class="form-group">
+          <label>Year</label>
+          <input type="number" name="year" value="<?php echo htmlspecialchars($v['year']); ?>" class="form-control">
+        </div>
+
+        <div class="form-group">
+          <label>Color</label>
+          <input type="text" name="color" value="<?php echo htmlspecialchars($v['color']); ?>" class="form-control">
+        </div>
+
+        <div class="form-group">
+          <label>Transmission</label>
+          <select name="transmission" class="form-control">
+            <option <?php echo ($v['transmission']=='Automatic') ? 'selected' : ''; ?>>Automatic</option>
+            <option <?php echo ($v['transmission']=='Manual') ? 'selected' : ''; ?>>Manual</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Fuel Type</label>
+          <input type="text" name="fuel_type" value="<?php echo htmlspecialchars($v['fuel_type']); ?>" class="form-control">
+        </div>
+
+        <div class="form-group">
+          <label>Mileage</label>
+          <input type="number" name="mileage" value="<?php echo htmlspecialchars($v['mileage']); ?>" class="form-control">
+        </div>
+
+         <div class="form-group">
+          <label>Engine Type</label>
+          <input type="text" name="engine_type" value="<?php echo htmlspecialchars($v['engine_type']); ?>" class="form-control">
+        </div>
+         <div class="form-group">
+          <label>Plate Number</label>
+          <input type="text" name="plate_number" value="<?php echo htmlspecialchars($v['plate_number']); ?>" class="form-control">
+        </div>
+         <div class="form-group">
+          <label>Body Type</label>
+          <input type="text" name="body_type" value="<?php echo htmlspecialchars($v['body_type']); ?>" class="form-control">
+        </div>
+
+        <div class="form-group">
+          <label>Purchase Price</label>
+          <input type="number" step="0.01" name="purchase_price" value="<?php echo htmlspecialchars($v['purchase_price']); ?>" class="form-control">
+        </div>
+
+        <div class="form-group">
+          <label>Selling Price</label>
+          <input type="number" step="0.01" name="selling_price" value="<?php echo htmlspecialchars($v['selling_price']); ?>" class="form-control">
+        </div>
+
+        <div class="form-group">
+          <label>Image</label>
+          <input type="file" name="image" value="<?php echo htmlspecialchars($v['image_path']); ?>" accept="image/*">
+        </div>
+
+        <div class="form-group">
+          <label>Status</label>
+          <select name="status" value="<?php echo htmlspecialchars($v['status']); ?>">
+            <option>Available</option>
+            <option>Reserved</option>
+          </select>
+        </div>
+
+        <div class="form-group full-width">
+          <label>Notes</label>
+          <textarea name="notes" value="<?php echo htmlspecialchars($v['notes']); ?>" class="form-control"></textarea>
+        </div>
+        
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn-emoji-save">Update Vehicle</button>
+          <button type="reset" class="btn-emoji-cancel" onclick="window.location.href='vehicles.php'">Cancel</button>
+        </div>
+        </form>
+    </div>
+</div>
 <?php require 'footer.php'; ?>
