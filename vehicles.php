@@ -4,6 +4,85 @@ require_once __DIR__ . '/config.php';
 if (!isset($_SESSION['user'])) header('Location: login.php');
 $pdo = getPDO();
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import'])) {
+
+    // 1. Check if file exists
+    if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+        die("Please select a valid CSV file.");
+    }
+
+    // 2. Validate file type
+    $fileTmpPath = $_FILES['file']['tmp_name'];
+    $fileName = $_FILES['file']['name'];
+    $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+
+    if ($fileExtension !== 'csv') {
+        die("Only CSV files are allowed.");
+    }
+
+    // 3. Open file safely
+    if (($handle = fopen($fileTmpPath, 'r')) === false) {
+        die("Unable to open uploaded file.");
+    }
+
+    // 4. Read header row
+    $header = fgetcsv($handle);
+
+    if (!$header) {
+        die("Invalid CSV format.");
+    }
+
+    // 5. Prepare INSERT statement for vehicles table
+    $stmt = $pdo->prepare("
+        INSERT INTO vehicles (
+            image_path, year, brand, model, transmission,
+            mileage, plate_number, body_type, color,
+            engine_type, fuel_type, status,
+            purchase_price, selling_price, created_at
+        ) VALUES (
+            :image_path, :year, :brand, :model, :transmission,
+            :mileage, :plate_number, :body_type, :color,
+            :engine_type, :fuel_type, :status,
+            :purchase_price, :selling_price, NOW()
+        )
+    ");
+
+    // 6. Begin transaction (FAST bulk insert)
+    $pdo->beginTransaction();
+
+    while (($row = fgetcsv($handle, 1000, ",")) !== false) {
+
+        if (count($row) !== count($header)) {
+            continue; // skip invalid rows
+        }
+
+        $data = array_combine($header, $row);
+
+        $stmt->execute([
+            ':image_path'     => $data['image_path'] ?? null,
+            ':year'           => $data['year'] ?? null,
+            ':brand'          => $data['brand'] ?? null,
+            ':model'          => $data['model'] ?? null,
+            ':transmission'   => $data['transmission'] ?? null,
+            ':mileage'        => $data['mileage'] ?? null,
+            ':plate_number'   => $data['plate_number'] ?? null,
+            ':body_type'      => $data['body_type'] ?? null,
+            ':color'          => $data['color'] ?? null,
+            ':engine_type'    => $data['engine_type'] ?? null,
+            ':fuel_type'      => $data['fuel_type'] ?? null,
+            ':status'         => $data['status'] ?? 'Available',
+            ':purchase_price' => $data['purchase_price'] ?? 0,
+            ':selling_price'  => $data['selling_price'] ?? 0,
+        ]);
+    }
+
+    $pdo->commit();
+    fclose($handle);
+
+    echo "<script>alert('Bulk import completed successfully!'); window.location.href='vehicles.php';</script>";
+}
+
+
 $q = [];
 // By default hide sold units from inventory listing. If a status is explicitly requested, honor it.
 $sql = "SELECT * FROM vehicles WHERE 1";
@@ -26,8 +105,11 @@ $sql .= " ORDER BY " . $order;
 $stmt = $pdo->prepare($sql);
 $stmt->execute($q);
 $vehicles = $stmt->fetchAll();
+
 require 'header.php';
 ?>
+
+
 <div class="inventory-container">
 
   <!-- Header -->
@@ -37,7 +119,18 @@ require 'header.php';
       <p>Manage and monitor all available units</p>
     </div>
     <a href="vehicle_add.php" class="btn-add">+ Add Vehicle</a>
+    <h2>Import CSV here</h2>
+    <form method="post" class="form-data" enctype="multipart/form-data">
+    <input type="file" name="file" accept=".csv">
+    <input type="submit" name="import" value="Import">
+    <?php
+
+?>
+    
+</form>
+
   </div>
+  
 
   <!-- Filter Card -->
   <div class="filter-card">
@@ -73,7 +166,6 @@ require 'header.php';
       <thead>
         <tr>
           <th>Image</th>
-          <th>Stock</th>
           <th>Brand</th>
           <th>Model</th>
           <th>Year</th>
@@ -91,7 +183,6 @@ require 'header.php';
           $brand = htmlspecialchars($v['brand']);
           $model = htmlspecialchars($v['model']);
           $year = htmlspecialchars($v['year']);
-          $stock = htmlspecialchars($v['stock_number']);
           $status = htmlspecialchars($v['status']);
           $price = '₱' . number_format($v['selling_price'], 2);
           $date = htmlspecialchars($v['created_at']);
@@ -101,7 +192,6 @@ require 'header.php';
             'brand'          => $v['brand'],
             'model'          => $v['model'],
             'year'           => $v['year'],
-            'stock'          => $v['stock_number'],
             'status'         => $v['status'],
             'price'          => $price,
             'date'           => $v['created_at'],
@@ -127,7 +217,6 @@ require 'header.php';
             <?php endif; ?>
           </td>
 
-          <td><?php echo $stock; ?></td>
           <td><?php echo $brand; ?></td>
           <td><?php echo $model; ?></td>
           <td><?php echo $year; ?></td>
@@ -165,9 +254,7 @@ require 'header.php';
     <img id="mImg" class="modal-img" src="" alt="Vehicle Image" style="display:none">
     <div id="mNoImg" style="display:none; text-align:center; padding:20px; color:#555; font-size:13px;">No Image Available</div>
     <div class="modal-title" id="mTitle"></div>
-    <div class="modal-stock" id="mStock"></div>
     <div class="modal-grid">
-      <div class="modal-field"><label>Stock Number</label><span id="mStockNumber"></span></div>
       <div class="modal-field"><label>Vehicle Type</label><span id="mVehicleType"></span></div>
       <div class="modal-field"><label>Brand</label><span id="mBrand"></span></div>
       <div class="modal-field"><label>Model</label><span id="mModel"></span></div>
@@ -205,10 +292,8 @@ function openModal(row) {
     noImg.style.display = 'block';
   }
   document.getElementById('mTitle').textContent = v.brand + ' ' + v.model;
-  document.getElementById('mStock').textContent = 'Stock #: ' + v.stock;
   
   // Populate all fields
-  document.getElementById('mStockNumber').textContent = v.stock || 'N/A';
   document.getElementById('mVehicleType').textContent = v.vehicle_type || 'N/A';
   document.getElementById('mBrand').textContent = v.brand || 'N/A';
   document.getElementById('mModel').textContent = v.model || 'N/A';

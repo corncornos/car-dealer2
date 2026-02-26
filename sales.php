@@ -3,7 +3,7 @@ session_start();
 require_once __DIR__ . '/config.php';
 if (!isset($_SESSION['user'])) header('Location: login.php');
 $pdo = getPDO();
-$stmt = $pdo->query('SELECT s.*, v.stock_number, v.brand, v.model, v.image_path 
+$stmt = $pdo->query('SELECT s.*, v.brand, v.model
                      FROM sales s 
                      JOIN vehicles v ON v.id = s.vehicle_id 
                      ORDER BY s.sale_date DESC');
@@ -24,21 +24,7 @@ require 'header.php';
   <tbody>
     <?php foreach($sales as $s): ?>
       <tr>
-        <td>
-          <div class="vehicle-image">
-            <?php if (!empty($s['image_path'])): ?>
-              <img src="/car-dealer/<?php echo htmlspecialchars($s['image_path']); ?>" alt="Vehicle Image">
-              <?php if($s['status'] === 'Sold'): ?>
-                <div class="sold-badge">SOLD</div>
-              <?php endif; ?>
-            <?php else: ?>
-              <div class="no-image">No Image</div>
-            <?php endif; ?>
-          </div>
-          <div class="vehicle-info">
-            <?php echo htmlspecialchars($s['brand'].' '.$s['model'].' ('.$s['stock_number'].')'); ?>
-          </div>
-        </td>
+        <td><?php echo htmlspecialchars($s['brand'].' '.$s['model']); ?></td>
         <td><?php echo htmlspecialchars($s['buyer_name']); ?></td>
         <td>₱<?php echo number_format($s['sale_price'],2); ?></td>
         <td><?php echo htmlspecialchars($s['sale_date']); ?></td>
