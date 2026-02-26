@@ -331,6 +331,36 @@ tbody tr {
   flex-wrap: wrap;
   margin-top: 10px;
 }
+form.form-data input[type="file"]{
+  background: black;
+  color: gold;
+  border: none;
+  padding: 6px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.3s;
+}
+input[type="file"]::-webkit-file-upload-button {
+  background: gold;
+  color: black;
+  border: none;
+  padding: 6px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.3s;
+}
+input{
+  background: gold;
+  color: black;
+  border: none;
+  padding: 6px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.3s;
+}
 
 /* ===== FADE ANIMATION ===== */
 @keyframes fadeIn {

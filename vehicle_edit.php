@@ -32,7 +32,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     $after = [
-        'stock_number' => $_POST['stock_number'] ?? null,
         'vehicle_type' => $_POST['vehicle_type'] ?? null,
         'brand' => $_POST['brand'] ?? null,
         'model' => $_POST['model'] ?? null,
@@ -51,7 +50,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'notes' => $_POST['notes'] ?? null,
     ];
     $data = [
-        $after['stock_number'],
         $after['vehicle_type'],
         $after['brand'],
         $after['model'],
@@ -70,21 +68,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $after['notes'],
         $id
     ];
-    // 🔎 CHECK DUPLICATE STOCK NUMBER (EXCEPT CURRENT VEHICLE)
-$check = $pdo->prepare(
-    "SELECT id FROM vehicles 
-     WHERE stock_number = ? AND id != ?"
-);
-$check->execute([$_POST['stock_number'], $id]);
 
-if ($check->rowCount() > 0) {
-    echo "<script>
-        alert('The existing stock number is already in use.');
-        window.history.back();
-    </script>";
-    exit; // ⛔ STOP execution (VERY IMPORTANT)
-}
-    $stmt = $pdo->prepare('UPDATE vehicles SET stock_number=?, vehicle_type=?, brand=?,
+
+    $stmt = $pdo->prepare('UPDATE vehicles SET vehicle_type=?, brand=?,
      model=?, year=?, color=?, transmission=?
      , fuel_type=?, mileage=?, engine_type=?, plate_number=?,
       body_type=?, purchase_price=?, selling_price=?, image_path=?
@@ -109,11 +95,6 @@ require 'header.php';
     <!-- Form -->
     <form method="post" enctype="multipart/form-data" class="vehicle-form">
       <div class="form-row">
-
-        <div class="form-group">
-          <label>Stock Number</label>
-          <input type="text" name="stock_number" value="<?php echo htmlspecialchars($v['stock_number']); ?>" class="form-control">
-        </div>
 
         <div class="form-group">
           <label>Type</label>

@@ -48,7 +48,6 @@ function format_audit_detail($detail, $action = '') {
     'method' => 'Payment method',
     'sale_date' => 'Sale date',
     'date' => 'Sale date',
-    'stock_number' => 'Stock number',
     'vehicle_type' => 'Vehicle type',
     'brand' => 'Brand',
     'model' => 'Model',

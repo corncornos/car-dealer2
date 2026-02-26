@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     $data = [
-        $_POST['stock_number'] ?? null,
+        $imagePath,
         $_POST['vehicle_type'] ?? null,
         $_POST['brand'] ?? null,
         $_POST['model'] ?? null,
@@ -37,30 +37,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_POST['body_type'] ?? null,
         $_POST['purchase_price'] ?? null,
         $_POST['selling_price'] ?? null,
-        $imagePath,
         $_POST['status'] ?? 'Available',
         $_POST['notes'] ?? null,
     ];
-    // 🔎 CHECK DUPLICATE STOCK NUMBER
-$check = $pdo->prepare(
-    "SELECT id FROM vehicles WHERE stock_number = ?"
-);
-$check->execute([$_POST['stock_number'] ?? null]);
-
-if ($check->rowCount() > 0) {
-    echo "<script>
-        alert('The existing stock number is already in use.');
-        window.history.back();
-    </script>";
-    exit; // ⛔ VERY IMPORTANT
-}
 
     $stmt = $pdo->prepare('INSERT INTO vehicles 
-    (stock_number, vehicle_type, brand, model, year, color, 
-    transmission, fuel_type, mileage, engine_type, plate_number, body_type, purchase_price, selling_price, image_path, status, notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+    (image_path,vehicle_type, brand, model, year, color, 
+    transmission, fuel_type, mileage, engine_type, plate_number, body_type, purchase_price, selling_price, status, notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
     $stmt->execute($data);
     $id = $pdo->lastInsertId();
-    add_audit($pdo, 'Vehicle Added', json_encode(['id'=>$id,'stock_number'=>$_POST['stock_number'] ?? null,'brand'=>$_POST['brand'] ?? null,'model'=>$_POST['model'] ?? null]));
+    add_audit($pdo, 'Vehicle Added', json_encode(['brand'=>$_POST['brand'] ?? null,'model'=>$_POST['model'] ?? null]));
     header('Location: vehicles.php');
     exit;
 }
@@ -81,19 +67,25 @@ require 'header.php';
     <form method="post" enctype="multipart/form-data" class="vehicle-form">
       <div class="form-row">
 
-        <div class="form-group">
-          <label>Stock Number</label>
-          <input type="text" name="stock_number" placeholder="Enter stock number">
-        </div>
-
+       
         <div class="form-group">
           <label>Type</label>
-          <input type="text" name="vehicle_type" placeholder="CAR, Motor...">
+          <select name="vehicle_type">
+            <option>CAR</option>
+            <option>Motor</option>
+          </select>
         </div>
 
         <div class="form-group">
           <label>Brand</label>
-          <input type="text" name="brand" placeholder="Brand">
+          <select name="brand">
+            <option>Toyota</option>
+            <option>Honda</option>
+            <option>BMW</option>
+            <option>Mercedes</option>
+            <option>Audi</option>
+            <option>Other</option>
+          </select>
         </div>
 
         <div class="form-group">
