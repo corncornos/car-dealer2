@@ -32,7 +32,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     $after = [
-        'vehicle_type' => $_POST['vehicle_type'] ?? null,
         'brand' => $_POST['brand'] ?? null,
         'model' => $_POST['model'] ?? null,
         'year' => $_POST['year'] ?? null,
@@ -50,7 +49,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'notes' => $_POST['notes'] ?? null,
     ];
     $data = [
-        $after['vehicle_type'],
         $after['brand'],
         $after['model'],
         $after['year'],
@@ -70,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ];
 
 
-    $stmt = $pdo->prepare('UPDATE vehicles SET vehicle_type=?, brand=?,
+    $stmt = $pdo->prepare('UPDATE vehicles SET brand=?,
      model=?, year=?, color=?, transmission=?
      , fuel_type=?, mileage=?, engine_type=?, plate_number=?,
       body_type=?, purchase_price=?, selling_price=?, image_path=?
@@ -95,11 +93,6 @@ require 'header.php';
     <!-- Form -->
     <form method="post" enctype="multipart/form-data" class="vehicle-form">
       <div class="form-row">
-
-        <div class="form-group">
-          <label>Type</label>
-          <input type="text" name="vehicle_type" value="<?php echo htmlspecialchars($v['vehicle_type']); ?>" class="form-control">
-        </div>
 
         <div class="form-group">
           <label>Brand</label>

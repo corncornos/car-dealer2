@@ -24,7 +24,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     $data = [
         $imagePath,
-        $_POST['vehicle_type'] ?? null,
         $_POST['brand'] ?? null,
         $_POST['model'] ?? null,
         $_POST['year'] ?? null,
@@ -42,8 +41,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ];
 
     $stmt = $pdo->prepare('INSERT INTO vehicles 
-    (image_path,vehicle_type, brand, model, year, color, 
-    transmission, fuel_type, mileage, engine_type, plate_number, body_type, purchase_price, selling_price, status, notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+    (image_path, brand, model, year, color, 
+    transmission, fuel_type, mileage, engine_type, plate_number, body_type, purchase_price, selling_price, status, notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
     $stmt->execute($data);
     $id = $pdo->lastInsertId();
     add_audit($pdo, 'Vehicle Added', json_encode(['brand'=>$_POST['brand'] ?? null,'model'=>$_POST['model'] ?? null]));
@@ -68,13 +67,6 @@ require 'header.php';
       <div class="form-row">
 
        
-        <div class="form-group">
-          <label>Type</label>
-          <select name="vehicle_type">
-            <option>CAR</option>
-            <option>Motor</option>
-          </select>
-        </div>
 
         <div class="form-group">
           <label>Brand</label>

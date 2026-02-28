@@ -378,12 +378,39 @@ input{
   }
   
   
+
 }
 
+/* ===== PAGINATION ===== */
+.pagination-wrapper {
+  margin-top: 30px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+}
 
+.pagination-info {
+  text-align: center;
+  margin-bottom: 15px;
+  color: #bbb;
+  font-size: 14px;
+}
 
+.pagination {
+  display: flex;
+  justify-content: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 5px;
+}
 
-
+.pagination li {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
 
 
 

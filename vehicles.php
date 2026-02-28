@@ -4,6 +4,7 @@ require_once __DIR__ . '/config.php';
 if (!isset($_SESSION['user'])) header('Location: login.php');
 $pdo = getPDO();
 
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import'])) {
 
     // 1. Check if file exists
@@ -83,17 +84,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import'])) {
 }
 
 
-$q = [];
+// Pagination setup
+$perPage = 25;
+$page = max(1, (int)($_GET['page'] ?? 1));
+$offset = ($page - 1) * $perPage;
+
+// Build WHERE conditions
+$where = [];
+$params = [];
+
 // By default hide sold units from inventory listing. If a status is explicitly requested, honor it.
-$sql = "SELECT * FROM vehicles WHERE 1";
 if (empty($_GET['status'])) {
-  $sql .= " AND status <> 'Sold'";
+  $where[] = "status <> 'Sold'";
 }
-if (!empty($_GET['brand'])) { $sql .= " AND brand LIKE ?"; $q[] = '%'.$_GET['brand'].'%'; }
-if (!empty($_GET['model'])) { $sql .= " AND model LIKE ?"; $q[] = '%'.$_GET['model'].'%'; }
-if (!empty($_GET['year'])) { $sql .= " AND year = ?"; $q[] = $_GET['year']; }
-if (!empty($_GET['status'])) { $sql .= " AND status = ?"; $q[] = $_GET['status']; }
-// sort
+if (!empty($_GET['brand'])) { 
+  $where[] = "brand LIKE ?"; 
+  $params[] = '%'.$_GET['brand'].'%'; 
+}
+if (!empty($_GET['model'])) { 
+  $where[] = "model LIKE ?"; 
+  $params[] = '%'.$_GET['model'].'%'; 
+}
+if (!empty($_GET['year'])) { 
+  $where[] = "year = ?"; 
+  $params[] = $_GET['year']; 
+}
+if (!empty($_GET['status'])) { 
+  $where[] = "status = ?"; 
+  $params[] = $_GET['status']; 
+}
+
+$whereClause = !empty($where) ? "WHERE " . implode(' AND ', $where) : "";
+
+// Sort order
 $order = 'created_at DESC';
 if (!empty($_GET['sort'])) {
     if ($_GET['sort'] === 'price_asc') $order = 'selling_price ASC';
@@ -101,9 +124,18 @@ if (!empty($_GET['sort'])) {
     if ($_GET['sort'] === 'date_asc') $order = 'created_at ASC';
     if ($_GET['sort'] === 'date_desc') $order = 'created_at DESC';
 }
-$sql .= " ORDER BY " . $order;
+
+// Count total records for pagination
+$countSql = "SELECT COUNT(*) FROM vehicles $whereClause";
+$countStmt = $pdo->prepare($countSql);
+$countStmt->execute($params);
+$total = $countStmt->fetchColumn();
+$pages = ceil($total / $perPage);
+
+// Get paginated results
+$sql = "SELECT * FROM vehicles $whereClause ORDER BY $order LIMIT $perPage OFFSET $offset";
 $stmt = $pdo->prepare($sql);
-$stmt->execute($q);
+$stmt->execute($params);
 $vehicles = $stmt->fetchAll();
 
 require 'header.php';
@@ -177,7 +209,15 @@ require 'header.php';
       </thead>
 
       <tbody>
-        <?php foreach($vehicles as $v): ?>
+        <?php if (empty($vehicles)): ?>
+          <tr>
+            <td colspan="8" style="text-align: center; padding: 40px; color: #888;">
+              <div style="font-size: 16px; margin-bottom: 10px;">🚗 No vehicles found</div>
+              <div style="font-size: 14px;">Try adjusting your filters or add a new vehicle to get started.</div>
+            </td>
+          </tr>
+        <?php else: ?>
+          <?php foreach($vehicles as $v): ?>
         <?php
           $img = htmlspecialchars($v['image_path'] ?? '');
           $brand = htmlspecialchars($v['brand']);
@@ -240,6 +280,7 @@ require 'header.php';
           </td>
         </tr>
         <?php endforeach; ?>
+        <?php endif; ?>
       </tbody>
 
     </table>
@@ -336,5 +377,89 @@ document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeModal();
 });
 </script>
+<!-- Pagination -->
+<?php if ($pages > 1): ?>
+<div class="pagination-wrapper">
+  <div class="pagination-info">
+    Showing <?php echo (($page - 1) * $perPage) + 1; ?> to <?php echo min($page * $perPage, $total); ?> of <?php echo $total; ?> vehicles
+  </div>
+  
+  <nav aria-label="Page navigation">
+    <ul class="pagination">
+      <!-- Previous button -->
+      <?php if ($page > 1): ?>
+        <li class="page-item">
+          <a class="page-link" href="?<?php echo http_build_query(array_merge($_GET, ['page' => $page - 1])); ?>" aria-label="Previous">
+            <span aria-hidden="true">&laquo;</span>
+            <span class="sr-only">Previous</span>
+          </a>
+        </li>
+      <?php else: ?>
+        <li class="page-item disabled">
+          <span class="page-link" aria-label="Previous">
+            <span aria-hidden="true">&laquo;</span>
+            <span class="sr-only">Previous</span>
+          </span>
+        </li>
+      <?php endif; ?>
+      
+      <!-- Page numbers -->
+      <?php
+        $showPages = 5; // Number of page links to show
+        $startPage = max(1, $page - floor($showPages / 2));
+        $endPage = min($pages, $startPage + $showPages - 1);
+        
+        if ($endPage - $startPage < $showPages - 1) {
+          $startPage = max(1, $endPage - $showPages + 1);
+        }
+        
+        // First page
+        if ($startPage > 1) {
+          echo '<li class="page-item"><a class="page-link" href="?' . http_build_query(array_merge($_GET, ['page' => 1])) . '">1</a></li>';
+          if ($startPage > 2) {
+            echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
+          }
+        }
+        
+        // Page range
+        for ($p = $startPage; $p <= $endPage; $p++):
+      ?>
+        <li class="page-item <?php if ($p == $page) echo 'active'; ?>">
+          <?php if ($p == $page): ?>
+            <span class="page-link"><?php echo $p; ?></span>
+          <?php else: ?>
+            <a class="page-link" href="?<?php echo http_build_query(array_merge($_GET, ['page' => $p])); ?>"><?php echo $p; ?></a>
+          <?php endif; ?>
+        </li>
+      <?php endfor; ?>
+      
+      <!-- Last page -->
+      <?php if ($endPage < $pages): ?>
+        <?php if ($endPage < $pages - 1): ?>
+          <li class="page-item disabled"><span class="page-link">...</span></li>
+        <?php endif; ?>
+        <li class="page-item"><a class="page-link" href="?<?php echo http_build_query(array_merge($_GET, ['page' => $pages])); ?>"><?php echo $pages; ?></a></li>
+      <?php endif; ?>
+      
+      <!-- Next button -->
+      <?php if ($page < $pages): ?>
+        <li class="page-item">
+          <a class="page-link" href="?<?php echo http_build_query(array_merge($_GET, ['page' => $page + 1])); ?>" aria-label="Next">
+            <span class="sr-only">Next</span>
+            <span aria-hidden="true">&raquo;</span>
+          </a>
+        </li>
+      <?php else: ?>
+        <li class="page-item disabled">
+          <span class="page-link" aria-label="Next">
+            <span class="sr-only">Next</span>
+            <span aria-hidden="true">&raquo;</span>
+          </span>
+        </li>
+      <?php endif; ?>
+    </ul>
+  </nav>
+</div>
+<?php endif; ?>
 
 <?php require 'footer.php'; ?>

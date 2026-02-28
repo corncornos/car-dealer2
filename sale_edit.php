@@ -10,7 +10,7 @@ $stmt->execute([$id]);
 $sale = $stmt->fetch();
 if (!$sale) { header('Location: sales.php'); exit; }
 // fetch vehicle for display
-$vst = $pdo->prepare('SELECT stock_number, brand, model FROM vehicles WHERE id = ?');
+$vst = $pdo->prepare('SELECT brand, model FROM vehicles WHERE id = ?');
 $vst->execute([$sale['vehicle_id']]);
 $veh = $vst->fetch();
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -33,7 +33,7 @@ require 'header.php';
 ?>
 <h3>Edit Sale</h3>
 <div class="card mb-3"><div class="card-body">
-  <h5><?php echo htmlspecialchars(($veh['brand'] ?? '').' '.($veh['model'] ?? '').' ('.($veh['stock_number'] ?? '').')'); ?></h5>
+  <h5><?php echo htmlspecialchars(($veh['brand'] ?? '').' '.($veh['model'] ?? '')); ?></h5>
   <form method="post">
     <div class="mb-3"><label>Buyer Name</label><input name="buyer_name" class="form-control" value="<?php echo htmlspecialchars($sale['buyer_name']); ?>"></div>
     <div class="mb-3"><label>Sale Price</label><input name="sale_price" class="form-control" value="<?php echo htmlspecialchars($sale['sale_price']); ?>" type="number" step="0.01"></div>
