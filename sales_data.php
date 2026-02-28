@@ -60,6 +60,11 @@ foreach ($monthly as $row) {
 }
 
 ?>
+<div class="report-header">
+    <h2>CAR INVENTORY SALES REPORT</h2>
+    <p>Date Printed: <?= date('F d, Y') ?></p>
+    <hr>
+</div>
 
 <div class="charts-row">
     <div class="chart-box">
@@ -88,12 +93,6 @@ foreach ($monthly as $row) {
     </div>
 </div>
 
-<div class="print-header">
-    <h2>CAR INVENTORY SALES REPORT</h2>
-    <p>Date Printed: <?= date('F d, Y') ?></p>
-    <hr>
-</div>
-
 <h3 class="sales-title">Sales</h3>
 
 <table class="sales-table">
@@ -108,13 +107,13 @@ foreach ($monthly as $row) {
 </thead>
 <tbody>
 <?php foreach($sales as $s): ?>
-<tr>
-<td><?= htmlspecialchars($s['brand'].' '.$s['model']) ?></td>
-<td><?= htmlspecialchars($s['buyer_name']) ?></td>
-<td>₱<?= number_format($s['sale_price'],2) ?></td>
-<td><?= htmlspecialchars($s['sale_date']) ?></td>
-<td><?= htmlspecialchars($s['payment_method']) ?></td>
-</tr>
-<?php endforeach; ?>
+    <tr>
+        <td><?= htmlspecialchars($s['brand'].' '.$s['model']) ?></td>
+        <td><?= htmlspecialchars($s['buyer_name']) ?></td>
+        <td>₱<?= number_format($s['sale_price'],2) ?></td>
+        <td><?= htmlspecialchars($s['sale_date']) ?></td>
+        <td><?= htmlspecialchars($s['payment_method']) ?></td>
+    </tr>
+    <?php endforeach; ?>
 </tbody>
 </table>
