@@ -177,6 +177,10 @@ tbody tr:hover {
   background: linear-gradient(45deg, #a67c00, #ffd700);
   color: black;
 }
+.badge.priority {
+  background:linear-gradient(45deg, #8b0000, #ff1a1a);
+  color: white;
+}
 
 /* ===== ACTION BUTTONS ===== */
 .actions {
