@@ -19,7 +19,7 @@ body {
     background: #111;
     padding: 25px;
     border-radius: 12px;
-    border: 1px solid #d4af37;
+    border: 1px solid gold;
     box-shadow: 0 0 20px rgba(212,175,55,0.3);
     text-align: center;
 }
@@ -52,6 +52,7 @@ body {
 /* TABLE */
 .sales-title {
     color: #d4af37;
+    font-size: 20px;
     margin-bottom: 15px;
 }
 
@@ -90,8 +91,8 @@ body {
 .filter-bar button {
     padding: 8px;
     border-radius: 6px;
-    border: 1px solid #d4af37;
-    background: #c99e12;
+    border: 1px solid gold;
+    background: #ffc400;
     color: black;
     font-weight: bold;
     font-size: 14px;
@@ -118,45 +119,134 @@ body {
         padding: 8px;
     }
 }
-/* =========================
-   PRINT MODE
-========================= */
+/* =====================================
+   CLEAN COMPACT PROFESSIONAL PRINT
+===================================== */
 @media print {
+
+    @page {
+        size: A4;
+        margin: 20mm 15mm 15mm 15mm;
+        
+    }
 
     body {
         background: #fff !important;
-        color: #000 !important;
+        font-size: 11px;
+        color: #000;
     }
 
+    /* Hide everything first */
+    body * {
+        visibility: hidden;
+    }
+
+    /* Show only report */
+    .sales-wrapper,
+    .sales-wrapper * {
+        visibility: visible;
+    }
+
+    /* Remove filters & buttons */
     .filter-bar,
-    .charts-row,
-    canvas {
+    button {
         display: none !important;
     }
 
+    /* ================= HEADER LOGO ================= */
+    .sales-wrapper {
+        position: relative;
+    }
+
+    .sales-wrapper::before {
+        content: "";
+        display: block;
+        background: url("images/logo.png") no-repeat center;
+        background-size: 100px;
+        height: 60px;
+        margin-bottom: 10px;
+    }
+
+    /* ================= SUMMARY (1 ROW SMALL) ================= */
     .summary {
-        box-shadow: none !important;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
     }
 
     .box {
-        border: 1px solid #000 !important;
+        background: none !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 5px;
+        text-align: center;
+    }
+
+    .box h4 {
+        font-size: 10px;
+        color: #000;
+        margin-bottom: 3px;
+        font-weight: 600;
+    }
+
+    .box p {
+        font-size: 14px;
+        margin: 0;
+        font-weight: bold;
+        color: #000;
+    }
+
+    /* ================= CHARTS (SIDE BY SIDE SMALL) ================= */
+    .charts-row {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    .chart-box {
+        flex: 1;
+        padding: 5px;
         background: #fff !important;
-        color: #000 !important;
+        border: 1px solid black;
+        margin-top: 20px;
+        page-break-inside: avoid;
+    }
+
+    .chart-box canvas {
+        height: 220px !important;
+    }
+
+    /* ================= TABLE ================= */
+    .sales-title {
+        color: #000;
+        font-size: 12px;
+        margin-bottom: 5px;
     }
 
     .sales-table {
+        font-size: 10px;
         background: #fff !important;
-        color: #000 !important;
     }
 
     .sales-table th {
-        background: #eee !important;
-        color: #000 !important;
+        background: #000;
+        color: #fff;
+        padding: 6px;
     }
 
     .sales-table td {
-        border: 1px solid #000 !important;
-        color: #000 !important;
+        padding: 6px;
+        border: 1px solid #ccc;
+        color: #000;
     }
-    
+
+    .sales-table thead {
+        display: table-header-group;
+    }
+
+    .sales-table tr {
+        page-break-inside: avoid;
+    }
 }
+
+
+    

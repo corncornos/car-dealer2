@@ -66,25 +66,6 @@ require 'header.php';
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-document.getElementById('applyFilter').addEventListener('click', function(){
-
-    let year  = document.getElementById('yearFilter').value;
-    let start = document.getElementById('startDate').value;
-    let end   = document.getElementById('endDate').value;
-
-    fetch(`sales_data.php?year=${year}&start=${start}&end=${end}`)
-    .then(response => response.text())
-    .then(data => {
-        document.getElementById('salesContent').innerHTML = data;
-    });
-});
-
-document.getElementById('printReport').addEventListener('click', function(){
-    window.print();
-});
-</script>
-
-<script>
 let revenueChartInstance = null;
 let unitChartInstance = null;
 
@@ -102,6 +83,7 @@ function initializeCharts() {
 
     if (revenueChartInstance) revenueChartInstance.destroy();
     if (unitChartInstance) unitChartInstance.destroy();
+
 
     revenueChartInstance = new Chart(revenueCanvas, {
         type: 'line',
@@ -125,12 +107,11 @@ function initializeCharts() {
             datasets: [{
                 label: 'Cars Sold',
                 data: unitData,
-                backgroundColor: 'rgba(212,175,55,0.6)'
+                backgroundColor: 'rgba(222, 176, 25, 0.6)'
             }]
         }
     });
 }
-
 /* Initialize first load */
 document.addEventListener("DOMContentLoaded", function() {
     initializeCharts();
@@ -150,6 +131,27 @@ document.getElementById('applyFilter').addEventListener('click', function(){
         initializeCharts(); // 🔥 VERY IMPORTANT
     });
 });
+document.getElementById('printReport').addEventListener('click', function(){
+
+    let year  = document.getElementById('yearFilter').value;
+    let start = document.getElementById('startDate').value;
+    let end   = document.getElementById('endDate').value;
+
+    // Reload filtered data first
+    fetch(`sales_data.php?year=${year}&start=${start}&end=${end}`)
+    .then(response => response.text())
+    .then(data => {
+        document.getElementById('salesContent').innerHTML = data;
+
+        initializeCharts(); // re-render charts
+
+        // Wait a moment so charts fully render
+        setTimeout(() => {
+            window.print();
+        }, 500);
+    });
+});
 </script>
+
 
 <?php require 'footer.php'; ?>
