@@ -11,7 +11,127 @@ $available = $pdo->query("SELECT COUNT(*) FROM vehicles WHERE status='Available'
 $inventoryValue = $pdo->query('SELECT COALESCE(SUM(purchase_price),0) FROM vehicles')->fetchColumn();
 
 require 'header.php';
+
 ?>
+<?php
+// ======================= HANDLE POST ACTIONS =======================
+
+// Single Reserve
+if(isset($_POST['reserve_single'])){
+    $id = intval($_POST['reserve_single']);
+    $stmt = $pdo->prepare("UPDATE vehicles SET status='Reserved' WHERE id=?");
+    $stmt->execute([$id]);
+    header("Location: dashboard.php"); exit();
+}
+
+// Bulk Reserve
+if(isset($_POST['bulk_reserve']) && !empty($_POST['bulk_ids'])){
+    $ids = array_map('intval', $_POST['bulk_ids']);
+    $placeholders = implode(',', array_fill(0,count($ids),'?'));
+    $stmt = $pdo->prepare("UPDATE vehicles SET status='Reserved' WHERE id IN ($placeholders)");
+    $stmt->execute($ids);
+    header("Location: dashboard.php"); exit();
+}
+
+// Schedule Viewing
+if(isset($_POST['schedule_viewing'])){
+    $id = intval($_POST['vehicle_id']);
+    $date = $_POST['viewing_date'];
+    $person = trim($_POST['viewing_person']);
+    $today = date('Y-m-d');
+    if($date >= $today && $person !== ''){
+        $stmt = $pdo->prepare("UPDATE vehicles SET viewing_date=?, viewing_person=? WHERE id=?");
+        $stmt->execute([$date,$person,$id]);
+        header("Location: dashboard.php"); exit();
+    } else {
+        echo "<script>alert('Invalid date or person name.');</script>";
+    }
+}
+
+// Priority Marking
+if(isset($_POST['priority_single'])){
+    $id = intval($_POST['priority_single']);
+    $stmt = $pdo->prepare("UPDATE vehicles SET status='Priority' WHERE id=?");
+    $stmt->execute([$id]);
+    header("Location: dashboard.php"); exit();
+}
+
+// ======================= FETCH DATA =======================
+
+// Reserved units
+$reservedUnits = $pdo->query("SELECT * FROM vehicles WHERE status='Reserved'")->fetchAll(PDO::FETCH_ASSOC);
+
+// Available units
+$availableUnits = $pdo->query("SELECT * FROM vehicles WHERE status='Available'")->fetchAll(PDO::FETCH_ASSOC);
+
+// Viewing units (Reserved + optional scheduled)
+$viewingUnits = $pdo->query("SELECT * FROM vehicles WHERE status='Reserved'")->fetchAll(PDO::FETCH_ASSOC);
+
+// Priority units
+$priorityUnits = $pdo->query("SELECT * FROM vehicles WHERE status='Priority'")->fetchAll(PDO::FETCH_ASSOC);
+
+// ======================= HANDLE SEARCH =======================
+
+$openReservedModal = false;
+$openViewingModal = false;
+$openPriorityModal = false;
+
+// Reserved modal search
+if(isset($_GET['search_reserved'])){
+    $openReservedModal = true;
+    $value = trim($_GET['reserved_value'] ?? '');
+    $field = $_GET['reserved_field'] ?? 'brand';
+    $allowed = ['brand','model','plate_number'];
+    if(!in_array($field,$allowed)) $field='brand';
+    $stmt = $pdo->prepare("SELECT * FROM vehicles WHERE status='Available' AND $field LIKE :search");
+    $stmt->execute([':search'=>"%$value%"]);
+    $availableUnits = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+// Viewing modal search
+if(isset($_GET['search_viewing'])){
+    $openViewingModal = true;
+    $value = trim($_GET['viewing_value'] ?? '');
+    $field = $_GET['viewing_field'] ?? 'brand';
+    $allowed = ['brand','model','plate_number'];
+    if(!in_array($field,$allowed)) $field='brand';
+    $stmt = $pdo->prepare("SELECT * FROM vehicles WHERE status='Reserved' AND $field LIKE :search");
+    $stmt->execute([':search'=>"%$value%"]);
+    $viewingUnits = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+// Priority modal search
+if(isset($_GET['search_priority'])){
+    $openPriorityModal = true;
+    $value = trim($_GET['priority_value'] ?? '');
+    $field = $_GET['priority_field'] ?? 'brand';
+    $allowed = ['brand','model','plate_number'];
+    if(!in_array($field,$allowed)) $field='brand';
+    $stmt = $pdo->prepare("SELECT * FROM vehicles WHERE status='Available' AND $field LIKE :search");
+    $stmt->execute([':search'=>"%$value%"]);
+    $availableUnits = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'], $_POST['unit_id'])) {
+
+    $unitId = (int) $_POST['unit_id'];
+
+    $stmt = $pdo->prepare("
+        UPDATE vehicles 
+        SET status = 'Available',
+            viewing_date = NULL,
+            viewing_person = NULL
+        WHERE id = ?
+    ");
+
+    $stmt->execute([$unitId]);
+
+    header("Location: ".$_SERVER['PHP_SELF']);
+    exit;
+}
+?>
+
+
 <body>
 <div class="dashboard-container">
     <div class="dashboard-main-box">
@@ -34,146 +154,164 @@ require 'header.php';
             </div>
         </div>
 
-        <!-- Action Buttons -->
-        <div class="dashboard-actions">
-            <button class="action-btn" onclick="openModal('reservedModal')">Reserve Unit</button>
-            <button class="action-btn" onclick="openModal('viewingModal')">Viewing Schedule</button>
-            <button class="action-btn" onclick="openModal('priorityModal')">Priority to Sell</button>
+<!-- ===== Dashboard Action Buttons ===== -->
+<div class="dashboard-actions">
+    <button class="action-btn" onclick="openModal('reservedModal')">Reserved Units</button>
+    <button class="action-btn" onclick="openModal('viewingModal')">Viewing Schedule</button>
+    <button class="action-btn" onclick="openModal('priorityModal')">Priority to Sell</button>
+</div>
+
+<!-- ===== Dashboard Preview Section ===== -->
+<div class="dashboard-preview-container">
+
+    <!-- Reserved Units Preview -->
+    <div>
+        <div class="preview-title">Reserved Units Preview</div>
+        <div class="preview-table-container">
+            <table class="preview-table">
+                <thead>
+                    <tr>
+						<th>Year</th>
+                        <th>Brand / Model</th>
+                        <th>Plate</th>
+                        <th>Price</th>
+						<th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach($reservedUnits as $unit): ?>
+                    <tr>
+						<td><?= htmlspecialchars($unit['year'] ?? 'N/A') ?></td>
+                        <td><?= htmlspecialchars($unit['brand'].' '.$unit['model']) ?></td>
+                        <td><?= htmlspecialchars($unit['plate_number']) ?></td>
+                        <td>₱<?= number_format($unit['selling_price'],2) ?></td>
+						<td>
+						<form method="POST" onsubmit="return confirm('Cancel reservation?')">
+							<input type="hidden" name="unit_id" value="<?= $unit['id'] ?>">
+							<input type="hidden" name="action" value="cancel_reserved">
+							<button type="submit" class="cancel-btn">Cancel</button>
+						</form>
+					</td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
         </div>
-
     </div>
+
+    <!-- Viewing Schedule Preview -->
+    <div>
+        <div class="preview-title">Viewing Schedule Preview</div>
+        <div class="preview-table-container">
+            <table class="preview-table">
+                <thead>
+                    <tr>
+						<th>Viewing Date</th>
+						<th>Year</th>
+                        <th>Brand / Model</th>
+                        <th>Plate</th>
+                        <th>Price</th>
+                        <th>Person</th>
+						<th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach($viewingUnits as $unit): ?>
+                    <tr>
+						<td><?= $unit['viewing_date'] ?? 'Not scheduled' ?></td>
+						<td><?= htmlspecialchars($unit['year'] ?? 'N/A') ?></td>
+                        <td><?= htmlspecialchars($unit['brand'].' '.$unit['model']) ?></td>
+                        <td><?= htmlspecialchars($unit['plate_number']) ?></td>
+                        <td>₱<?= number_format($unit['selling_price'],2) ?></td>
+                        <td><?= htmlspecialchars($unit['viewing_person'] ?? 'N/A') ?></td>
+						<td>
+						<form method="POST" onsubmit="return confirm('Cancel viewing schedule?')">
+							<input type="hidden" name="unit_id" value="<?= $unit['id'] ?>">
+							<input type="hidden" name="action" value="cancel_viewing">
+							<button type="submit" class="cancel-btn">Cancel</button>
+						</form>
+					</td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Priority to Sell Preview -->
+    <div>
+        <div class="preview-title">Priority to Sell Preview</div>
+        <div class="preview-table-container">
+            <table class="preview-table">
+                <thead>
+                    <tr>
+						<th>Year</th>
+                        <th>Brand / Model</th>
+                        <th>Plate</th>
+                        <th>Price</th>
+                        <th>Status</th>
+						<th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach($priorityUnits as $unit): ?>
+                    <tr>
+						<td><?= htmlspecialchars($unit['year'] ?? 'N/A') ?></td>
+                        <td><?= htmlspecialchars($unit['brand'].' '.$unit['model']) ?></td>
+                        <td><?= htmlspecialchars($unit['plate_number']) ?></td>
+                        <td>₱<?= number_format($unit['selling_price'],2) ?></td>
+                        <td><?= $unit['status'] ?></td>
+						<td>
+						<form method="POST" onsubmit="return confirm('Remove priority?')">
+							<input type="hidden" name="unit_id" value="<?= $unit['id'] ?>">
+							<input type="hidden" name="action" value="cancel_priority">
+							<button type="submit" class="cancel-btn">Cancel</button>
+						</form>
+					</td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 </div>
 
-<h3>Reserved Units</h3>
-<div class="reserved-units-container">
-<?php
-$stmt = $pdo->query("SELECT * FROM vehicles WHERE status='Reserved'");
-$reserved = $stmt->fetchAll(PDO::FETCH_ASSOC);
+<!-- ================= MODALS ================= -->
 
-if($reserved){
-    foreach($reserved as $row){
-        echo "<div class='reserved-card'>";
-        echo "<strong>".htmlspecialchars($row['brand']." ".$row['model'])."</strong><br>";
-        echo "Plate: ".htmlspecialchars($row['plate_number'])."<br>";
-        echo "Price: ₱".number_format($row['selling_price'],2);
-        echo "</div>";
-    }
-} else {
-    echo "<p>No reserved units yet.</p>";
-}
-?>
-</div>
-<h3>Viewing Schedule</h3>
-<div class="viewing-container">
-<?php
-$stmt = $pdo->query("SELECT * FROM vehicles 
-                     WHERE status='Reserved' 
-                     AND viewing_date IS NOT NULL");
-$viewings = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-if($viewings){
-    foreach($viewings as $unit){
-        echo "<div class='viewing-card'>";
-        echo "<strong>".htmlspecialchars($unit['brand']." ".$unit['model'])."</strong><br>";
-        echo "Plate: ".htmlspecialchars($unit['plate_number'])."<br>";
-        echo "Viewing Date: ".$unit['viewing_date']."<br>";
-        echo "Price: ₱".number_format($unit['selling_price'],2);
-        echo "</div>";
-    }
-} else {
-    echo "<p>No scheduled viewings yet.</p>";
-}
-?>
-</div>
-
-<!-- ===== Modals ===== -->
-
-<!-- Unit Reserved Modal -->
+<!-- Reserved Modal -->
 <div id="reservedModal" class="modal">
     <div class="modal-content">
         <span class="close" onclick="closeModal('reservedModal')">&times;</span>
-        <h3>Unit Reserve</h3>
+        <h3>Reserved Units & Available Inventory</h3>
 
-        <!-- ================= SEARCH FORM ================= -->
         <form method="GET">
-            <input type="text" name="reserved_value" placeholder="Enter keyword...">
+            <input type="text" name="reserved_value" placeholder="Search available..." value="<?= htmlspecialchars($_GET['reserved_value'] ?? '') ?>">
             <select name="reserved_field">
-                <option value="brand">Brand Name</option>
-                <option value="model">Model</option>
-                <option value="plate_number">Plate Number</option>
+                <option value="brand" <?= (($_GET['reserved_field'] ?? '')=='brand')?'selected':'' ?>>Brand</option>
+                <option value="model" <?= (($_GET['reserved_field'] ?? '')=='model')?'selected':'' ?>>Model</option>
+                <option value="plate_number" <?= (($_GET['reserved_field'] ?? '')=='plate_number')?'selected':'' ?>>Plate</option>
             </select>
-            <button type="submit" name="search_reserved" class="action-btn">Search</button>
+            <button type="submit" name="search_reserved">Search</button>
         </form>
-
-        <!-- ================= INVENTORY LIST ================= -->
-<form method="POST">
-    <div class="search-results-container">
-
-        <?php
-        $sql = "SELECT * FROM vehicles WHERE status='Available'";
-        $params = [];
-
-        if(isset($_GET['search_reserved']) && !empty($_GET['reserved_value'])){
-            $value = trim($_GET['reserved_value']);
-            $field = $_GET['reserved_field'];
-            $allowed = ['brand','model','plate_number'];
-            if(in_array($field, $allowed)){
-                $sql .= " AND $field LIKE :search";
-                $params[':search'] = "%$value%";
-            }
-        }
-
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute($params);
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        if($rows){
-            foreach($rows as $row){
-        ?>
-                <div class="result-card">
-                    <input type="checkbox" name="bulk_ids[]" value="<?php echo $row['id']; ?>">
-
-                    <strong><?php echo htmlspecialchars($row['brand']." ".$row['model']); ?></strong><br>
-                    Plate: <?php echo htmlspecialchars($row['plate_number']); ?><br>
-                    Price: ₱<?php echo number_format($row['selling_price'],2); ?><br><br>
-
-                    <!-- Single Reserve -->
-                    <button type="submit" name="reserve_single" value="<?php echo $row['id']; ?>">
-                        Reserve
-                    </button>
-                </div>
-        <?php
-            }
-        } else {
-            echo "<p>No available units found.</p>";
-        }
-        ?>
-
+        <h4>Available Units</h4>
+        <form method="POST">
+            <div class="search-results-container">
+                <?php foreach($availableUnits as $unit): ?>
+                    <div class="result-card">
+                        <input type="checkbox" name="bulk_ids[]" value="<?= $unit['id'] ?>">
+                        <strong><?= htmlspecialchars($unit['brand'].' '.$unit['model']) ?></strong><br>
+                        Plate: <?= htmlspecialchars($unit['plate_number']) ?><br>
+                        Price: ₱<?= number_format($unit['selling_price'],2) ?><br>
+                        <button type="submit" name="reserve_single" value="<?= $unit['id'] ?>">Reserve</button>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+            <br>
+            <button type="submit" name="bulk_reserve">Reserve Selected</button>
+        </form>
     </div>
-
-    <br>
-    <button type="submit" name="bulk_reserve">Reserve Selected</button>
-</form>
-<?php
-// Single Reserve
-if(isset($_POST['reserve_single'])){
-    $id = intval($_POST['reserve_single']);
-    $stmt = $pdo->prepare("UPDATE vehicles SET status='Reserved' WHERE id=?");
-    $stmt->execute([$id]);
-    header("Location: dashboard.php"); // redirect so modal closes and dashboard reloads
-    exit();
-}
-
-// Bulk Reserve
-if(isset($_POST['bulk_reserve']) && !empty($_POST['bulk_ids'])){
-    $ids = array_map('intval', $_POST['bulk_ids']);
-    $placeholders = implode(',', array_fill(0, count($ids), '?'));
-    $stmt = $pdo->prepare("UPDATE vehicles SET status='Reserved' WHERE id IN ($placeholders)");
-    $stmt->execute($ids);
-    header("Location: dashboard.php");
-    exit();
-}
-?>
+</div>
 
 <!-- Viewing Schedule Modal -->
 <div id="viewingModal" class="modal">
@@ -181,219 +319,76 @@ if(isset($_POST['bulk_reserve']) && !empty($_POST['bulk_ids'])){
         <span class="close" onclick="closeModal('viewingModal')">&times;</span>
         <h3>Viewing Schedule</h3>
 
-        <!-- Search Reserved Units -->
         <form method="GET">
-            <input type="text" name="viewing_value" placeholder="Enter keyword..." required>
-            <select name="viewing_field" required>
-                <option value="brand">Brand Name</option>
-                <option value="model">Model</option>
-                <option value="plate_number">Plate Number</option>
+            <input type="text" name="viewing_value" placeholder="Search reserved units..." value="<?= htmlspecialchars($_GET['viewing_value'] ?? '') ?>">
+            <select name="viewing_field">
+                <option value="brand" <?= (($_GET['viewing_field'] ?? '')=='brand')?'selected':'' ?>>Brand</option>
+                <option value="model" <?= (($_GET['viewing_field'] ?? '')=='model')?'selected':'' ?>>Model</option>
+                <option value="plate_number" <?= (($_GET['viewing_field'] ?? '')=='plate_number')?'selected':'' ?>>Plate</option>
             </select>
-            <button type="submit" name="search_viewing" class="action-btn">Search</button>
+            <button type="submit" name="search_viewing">Search</button>
         </form>
 
         <div class="search-results-container">
-        <?php
-        if(isset($_GET['search_viewing'])){
-            $value = trim($_GET['viewing_value']);
-            $field = $_GET['viewing_field'];
-            $allowed = ['brand','model','plate_number'];
-
-            if(in_array($field, $allowed)){
-                $stmt = $pdo->prepare("SELECT * FROM vehicles 
-                                       WHERE status='Reserved' 
-                                       AND $field LIKE :search");
-                $stmt->execute(['search' => "%$value%"]);
-                $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-                if($rows){
-                    foreach($rows as $row){
-        ?>
-                        <div class="result-card">
-						<strong><?php echo htmlspecialchars($row['brand']." ".$row['model']); ?></strong><br>
-						Plate: <?php echo htmlspecialchars($row['plate_number']); ?><br>
-						Price: ₱<?php echo number_format($row['selling_price'],2); ?><br><br>
-
-						<form method="POST">
-							<input type="hidden" name="vehicle_id" value="<?php echo $row['id']; ?>">
-
-							<!-- THIS IS THE DATE YOU WANT TO SCHEDULE -->
-							<input type="date" name="viewing_date" required 
-								   min="<?php echo date('Y-m-d'); ?>">
-
-							<button type="submit" name="schedule_viewing">
-								Schedule Viewing
-							</button>
-						</form>
-</div>
-        <?php
-                    }
-                } else {
-                    echo "<p>No reserved units found.</p>";
-                }
-            }
-        }
-        ?>
+            <?php foreach($viewingUnits as $unit): ?>
+                <div class="result-card">
+                    <strong><?= htmlspecialchars($unit['brand'].' '.$unit['model']) ?></strong><br>
+                    Plate: <?= htmlspecialchars($unit['plate_number']) ?><br>
+                    Price: ₱<?= number_format($unit['selling_price'],2) ?><br>
+                    Viewing Date: <?= $unit['viewing_date'] ?? 'Not scheduled' ?><br>
+                    Person: <?= htmlspecialchars($unit['viewing_person'] ?? 'N/A') ?><br>
+                    <form method="POST">
+                        <input type="hidden" name="vehicle_id" value="<?= $unit['id'] ?>">
+                        <input type="date" name="viewing_date" value="<?= $unit['viewing_date'] ?? '' ?>" required>
+                        <input type="text" name="viewing_person" value="<?= htmlspecialchars($unit['viewing_person'] ?? '') ?>" placeholder="Person Name" required>
+                        <button type="submit" name="schedule_viewing">Save</button>
+                    </form>
+                </div>
+            <?php endforeach; ?>
         </div>
     </div>
 </div>
-<?php
-if(isset($_POST['schedule_viewing'])){
-    $id = intval($_POST['vehicle_id']);
-    $date = $_POST['viewing_date'];
 
-    $stmt = $pdo->prepare("UPDATE vehicles 
-                           SET viewing_date=? 
-                           WHERE id=?");
-    $stmt->execute([$date, $id]);
-
-    header("Location: dashboard.php");
-    exit();
-}
-?>
-
-<!-- Priority to Sell Modal -->
+<!-- Priority Modal -->
 <div id="priorityModal" class="modal">
     <div class="modal-content">
         <span class="close" onclick="closeModal('priorityModal')">&times;</span>
-        <h3>Priority to Sell Search</h3>
+        <h3>Priority to Sell</h3>
+
         <form method="GET">
-            <input type="text" name="priority_value" placeholder="Enter keyword..." required>
-            <select name="priority_field" required>
-                <option value="brand">Brand Name</option>
-                <option value="model">Model</option>
-                <option value="plate_no">Plate Number</option>
+            <input type="text" name="priority_value" placeholder="Search available units..." value="<?= htmlspecialchars($_GET['priority_value'] ?? '') ?>">
+            <select name="priority_field">
+                <option value="brand" <?= (($_GET['priority_field'] ?? '')=='brand')?'selected':'' ?>>Brand</option>
+                <option value="model" <?= (($_GET['priority_field'] ?? '')=='model')?'selected':'' ?>>Model</option>
+                <option value="plate_number" <?= (($_GET['priority_field'] ?? '')=='plate_number')?'selected':'' ?>>Plate</option>
             </select>
-            <button type="submit" name="search_priority" class="action-btn">Search</button>
+            <button type="submit" name="search_priority">Search</button>
         </form>
 
         <div class="search-results-container">
-            <?php
-            if(isset($_GET['search_priority'])){
-                $value = $_GET['priority_value'];
-                $field = $_GET['priority_field'];
-                $allowed = ['brand','model','plate_no'];
-
-                if(in_array($field, $allowed)){
-                    $stmt = $pdo->prepare("SELECT * FROM inventory WHERE status='Priority' AND $field LIKE :search");
-                    $stmt->execute(['search' => "%$value%"]);
-                    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-                    if($rows){
-                        foreach($rows as $row){
-                            echo "<div class='result-card'>";
-                            echo "<strong>".$row['brand']." ".$row['model']."</strong><br>";
-                            echo "Plate: ".$row['plate_no']."<br>";
-                            echo "Price: ₱".number_format($row['price'],2);
-                            echo "</div>";
-                        }
-                    } else {
-                        echo "<p>No priority units found.</p>";
-                    }
-                }
-            }
-            ?>
+            <?php foreach($availableUnits as $unit): ?>
+                <div class="result-card">
+                    <strong><?= htmlspecialchars($unit['brand'].' '.$unit['model']) ?></strong><br>
+                    Plate: <?= htmlspecialchars($unit['plate_number']) ?><br>
+                    Price: ₱<?= number_format($unit['selling_price'],2) ?><br>
+                    <form method="POST">
+                        <button type="submit" name="priority_single" value="<?= $unit['id'] ?>">Mark Priority</button>
+                    </form>
+                </div>
+            <?php endforeach; ?>
         </div>
     </div>
 </div>
 <!-- ================= JAVASCRIPT ================= -->
+<!-- ================= JS MODAL CONTROL ================= -->
 <script>
-// ====== Modal Open/Close ======
-function openModal(id){
-    var modal = document.getElementById(id);
-    if(modal) modal.style.display = "block";
-}
-
-function closeModal(id){
-    var modal = document.getElementById(id);
-    if(modal) modal.style.display = "none";
-}
-
-// Close modal when clicking outside
-window.onclick = function(event){
-    var modals = document.querySelectorAll(".modal");
-    modals.forEach(function(modal){
-        if(event.target === modal){
-            modal.style.display = "none";
-        }
-    });
-}
-
-// ====== Toast Message ======
-function showToast(message){
-    let toast = document.createElement('div');
-    toast.innerText = message;
-    toast.style.position = 'fixed';
-    toast.style.bottom = '20px';
-    toast.style.left = '50%';
-    toast.style.transform = 'translateX(-50%)';
-    toast.style.background = '#4CAF50';
-    toast.style.color = '#fff';
-    toast.style.padding = '12px 20px';
-    toast.style.borderRadius = '6px';
-    toast.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
-    toast.style.zIndex = 10000;
-    toast.style.fontSize = '14px';
-    document.body.appendChild(toast);
-
-    setTimeout(() => toast.remove(), 1500);
-}
-
-// ====== Single Reserve ======
-function reserveUnit(id){
-    const card = document.getElementById('card-' + id);
-
-    fetch('reserve_process.php', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: 'action=single&id=' + id
-    })
-    .then(() => {
-        // Remove card immediately
-        if(card) card.remove();
-
-        // Show toast
-        showToast('Unit Reserved Successfully!');
-
-        // Close modal
-        document.getElementById('reservedModal').style.display = 'none';
-
-        // Redirect to dashboard
-        setTimeout(() => window.location.href = 'dashboard.php', 1000);
-    })
-    .catch(err => console.error(err));
-}
-
-// ====== Bulk Reserve ======
-function bulkReserve(){
-    let checked = document.querySelectorAll('input[name="bulk_ids[]"]:checked');
-    let ids = [];
-    checked.forEach(item => ids.push(item.value));
-
-    if(ids.length === 0){
-        alert('Select at least one unit.');
-        return;
-    }
-
-    // Remove selected cards immediately
-    checked.forEach(item => {
-        const card = item.closest('.result-card');
-        if(card) card.remove();
-    });
-
-    fetch('reserve_process.php', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: 'action=bulk&ids[]=' + ids.join('&ids[]=')
-    })
-    .then(() => {
-        showToast('Selected Units Reserved Successfully!');
-
-        document.getElementById('reservedModal').style.display = 'none';
-
-        setTimeout(() => window.location.href = 'dashboard.php', 1000);
-    })
-    .catch(err => console.error(err));
-}
+function openModal(id){document.getElementById(id).style.display="flex";}
+function closeModal(id){document.getElementById(id).style.display="none";}
+window.addEventListener("click",function(e){document.querySelectorAll(".modal").forEach(function(m){if(e.target===m)m.style.display="none";});});
+<?php if($openReservedModal): ?>document.addEventListener("DOMContentLoaded",()=>{openModal('reservedModal');});<?php endif; ?>
+<?php if($openViewingModal): ?>document.addEventListener("DOMContentLoaded",()=>{openModal('viewingModal');});<?php endif; ?>
+<?php if($openPriorityModal): ?>document.addEventListener("DOMContentLoaded",()=>{openModal('priorityModal');});<?php endif; ?>
 </script>
+
+
 </body>
